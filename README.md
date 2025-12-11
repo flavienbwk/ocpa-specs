@@ -1,10 +1,10 @@
-# ODPA Specifications
+# OCPA Specifications
 
-[![ODPA: v1](https://img.shields.io/badge/ODPA-v1-blue.svg)](./VERSION)
+[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](./VERSION)
 
-The Opinionated Docker Project Architecture (ODPA) is a recommended repo architecture.
+The Opinionated Containerized Project Architecture (OCPA) is a pragmatic repository specification designed from years of experience with containerized apps.
 
-It provides a standardized way of developing & deploying, allowing seamless onboarding and integration with CI/CD tools (e.g., auto-pulls).
+Made to provide it to your favorite AI software (for bootstraping or refactoring), it provides a standardized way of developing & deploying, allowing seamless onboarding and integration with CI/CD tools (e.g., auto-pulls).
 
 ## Required
 
@@ -21,8 +21,9 @@ It provides a standardized way of developing & deploying, allowing seamless onbo
 │   └── src
 ├── [...]                   // other services (e.g., app)
 ├── docs
-├── prod.docker-compose.yml
-├── docker-compose.yml
+├── k8s
+├── compose.prod.yml
+├── compose.yml
 ├── Makefile
 ├── README.md
 ├── LICENSE.md
