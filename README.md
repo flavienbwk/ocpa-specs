@@ -13,10 +13,10 @@ Made to provide it to your favorite AI software (for bootstraping or refactoring
 If your project follows the OCPA specifications, add this badge to your README to let others know:
 
 ```markdown
-[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/music-soul1-1/ocpa-specs)
+[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/flavienbwk/ocpa-specs)
 ```
 
-[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/music-soul1-1/ocpa-specs)
+[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/flavienbwk/ocpa-specs)
 
 This helps spread the word and builds a community of standardized, well-structured containerized projects.
 
