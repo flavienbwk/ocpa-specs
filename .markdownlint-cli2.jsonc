@@ -1,0 +1,6 @@
+{
+  "config": {
+    "extends": "./.markdownlint.json"
+  },
+  "ignores": ["LICENSE.md"]
+}
