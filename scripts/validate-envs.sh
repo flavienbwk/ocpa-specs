@@ -20,7 +20,7 @@
 #   4. Warnings for unused/undeclared variables
 #
 # USAGE:
-#   SCAN_DIRS="./scripts" ./scripts/validate-env-vars.sh
+#   SCAN_DIRS="./scripts" ./scripts/validate-envs.sh
 #
 # PARAMETERS:
 #   SCAN_DIRS  Comma-separated list of directories to scan for env vars
@@ -81,7 +81,7 @@ echo -e "${YELLOW}Step 1: Extracting environment variables used in code...${NC}"
 if [ -z "$SCAN_DIRS" ]; then
   echo -e "${YELLOW}⚠ No SCAN_DIRS provided, skipping code scanning...${NC}"
   echo -e "${YELLOW}  Set SCAN_DIRS env var with comma-separated directories to scan${NC}"
-  echo -e "${YELLOW}  Example: SCAN_DIRS=\"./server,./scripts\" ./scripts/validate-env-vars.sh${NC}"
+  echo -e "${YELLOW}  Example: SCAN_DIRS=\"./server,./scripts\" ./scripts/validate-envs.sh${NC}"
   TOTAL_USED=0
 else
   # Convert comma-separated directories to array

@@ -33,7 +33,7 @@ Made to provide it to your favorite AI software (for bootstraping or refactoring
 ├── scripts
 │   ├── auto-pull.sh        // Must be called by a CRON job to 
 │   ├── deploy-helm.sh      // Script that handles all the additional logics for Helm deployment (used by deploy.yml and make commands)
-│   └── assert-env-vars.sh  // Used in CI to check for missing, inconsistent or invalid env variables
+│   └── validate-envs.sh    // Used in CI to check for missing, inconsistent or invalid env variables
 ├── .env.example            // Your single source of truth for env variables
 ├── compose.prod.yml        // all-in-one production-ready (and secured) stack - can be tested locally
 ├── compose.yml             // all-in-one dev-ready hot-reload-enabled stack

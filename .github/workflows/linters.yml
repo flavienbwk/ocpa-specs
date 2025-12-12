@@ -46,7 +46,7 @@ jobs:
         env:
           SCAN_DIRS: "./scripts"
         run: |
-          bash scripts/validate-env-vars.sh
+          bash scripts/validate-envs.sh
 
       - name: Upload validation report (on failure)
         if: failure()
