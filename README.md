@@ -52,12 +52,12 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 
 ## Rules
 
-- OCPA-R1: All versions must be fixed: mandatory lock files or hard-coded (whether for code packages or CI references) ;
-- OCPA-R2: A single markdown file must be at root of directory: `README.md`. Others must be placed in the `docs/` directory ;
-- OCPA-R3: Makefile commands must at least include `dev`, `dev-[build,up,restart,down]` with aliases `[build,up,restart,down]`, `prod`, `prod-[build,up,restart,down]`, `helm-[deploy,uninstall]`, `downa` ;
-- OCPA-R4: Use [Flexible Flow](https://book-devops.berwick.fr/eng/index.html#flexible-flow-a-balanced-git-workflow) as git workflow ;
-- OCPA-R5: All pull requests must be prefixed by the issue number (e.g., `#38: Solving SEO problem`): this helps keeping track of the context for the commit ;
-- OCPA-R6: Every commit message should be prefixed by issue number (e.g., `#38: Added better meta description`): this helps keeping track of the context for the commit ;
-- OCPA-R7: Repo must be configured to squash a pull request commits on a feature branch merge to `main`;
-- OCPA-R8: Repo must be configured to forbid force-push on `main` and `release` branches ;
-- OCPA-R9: Repo must be configured to forbid force-merge on any branch, pipelines must succeed. If they are too slow, work on quickening them up!
+- **OCPA-R1**: All versions must be fixed: mandatory lock files or hard-coded (whether for code packages or CI references) ;
+- **OCPA-R2**: A single markdown file must be at root of directory: `README.md`. Others must be placed in the `docs/` directory ;
+- **OCPA-R3**: Makefile commands must at least include `dev`, `dev-[build,up,restart,down]` with aliases `[build,up,restart,down]`, `prod`, `prod-[build,up,restart,down]`, `helm-[deploy,uninstall]`, `downa` ;
+- **OCPA-R4**: Use [Flexible Flow](https://book-devops.berwick.fr/eng/index.html#flexible-flow-a-balanced-git-workflow) as git workflow ;
+- **OCPA-R5**: All pull requests must be prefixed by the issue number (e.g., `#38: Solving SEO problem`): this helps keeping track of the context for the commit ;
+- **OCPA-R6**: Every commit message should be prefixed by issue number (e.g., `#38: Added better meta description`): this helps keeping track of the context for the commit ;
+- **OCPA-R7**: Repo must be configured to squash a pull request commits on a feature branch merge to `main`;
+- **OCPA-R8**: Repo must be configured to forbid force-push on `main` and `release` branches ;
+- **OCPA-R9**: Repo must be configured to forbid force-merge on any branch, pipelines must succeed. If they are too slow, work on quickening them up!
