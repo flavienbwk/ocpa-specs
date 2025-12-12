@@ -8,6 +8,18 @@ The Opinionated Containerized Project Architecture (OCPA) is a pragmatic reposit
 
 Made to provide it to your favorite AI software (for bootstraping or refactoring), it provides a standardized way of developing & deploying, allowing seamless onboarding and integration with CI/CD tools (e.g., auto-pulls).
 
+## Using OCPA? Show it!
+
+If your project follows the OCPA specifications, add this badge to your README to let others know:
+
+```markdown
+[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/music-soul1-1/ocpa-specs)
+```
+
+[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/music-soul1-1/ocpa-specs)
+
+This helps spread the word and builds a community of standardized, well-structured containerized projects.
+
 ## Required
 
 - Make ;

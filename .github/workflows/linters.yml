@@ -6,6 +6,18 @@ on:
   push:
 
 jobs:
+  markdownlint:
+    runs-on: ubuntu-24.04
+    name: markdownlint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+
   gitleaks:
     runs-on: ubuntu-24.04
     name: gitleaks
