@@ -1,0 +1,20 @@
+# Gitleaks configuration file
+# https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks config"
+
+[extend]
+# Use the default gitleaks rules as a base
+useDefault = true
+
+# Paths to ignore during scanning
+[allowlist]
+paths = [
+    '''node_modules/''',
+    '''\.git/''',
+    '''vendor/''',
+    '''\.env\.example$''',
+    '''package-lock\.json$''',
+    '''yarn\.lock$''',
+    '''pnpm-lock\.yaml$''',
+]

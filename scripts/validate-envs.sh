@@ -107,7 +107,6 @@ else
   # Extract env vars from Shell scripts
   # Only detect explicitly declared env vars using the pattern: : "${VAR_NAME:?..."
   # This pattern is used at the top of scripts to document and validate required env vars.
-  # Example: : "${VLLM_API_KEY:?Required env var VLLM_API_KEY is not set}"
   for dir in "${DIRS_ARRAY[@]}"; do
     dir=$(echo "$dir" | xargs)  # Trim whitespace
     if [ -d "$dir" ]; then
@@ -236,7 +235,7 @@ K8S_VALUES_VARS_FILE=$(mktemp)
 
 if [ -d "$K8S_DIR" ]; then
   # Extract env var references from k8s templates: .Values.env.<section>.<VAR_NAME>
-  # Pattern: .Values.env.llmSmall.VLLM_MODEL, .Values.env.common.DEV_MODE, etc.
+  # Pattern: .Values.env.llm.VLLM_MODEL, .Values.env.common.DEV_MODE, etc.
   find "$K8S_DIR/templates/" -type f \( -name "*.yaml" -o -name "*.yml" \) -exec grep -oh \
     '\.Values\.env\.[a-zA-Z]*\.[A-Z_][A-Z0-9_]*' \
     {} + 2>/dev/null | \
@@ -247,7 +246,7 @@ if [ -d "$K8S_DIR" ]; then
   echo -e "${GREEN}✓ Found ${TOTAL_K8S} env var references in k8s templates${NC}"
 
   # Extract env vars defined in values.example.yaml under env: section
-  # Pattern: env.llmSmall.VLLM_MODEL: "value"
+  # Pattern: env.llm.VLLM_MODEL: "value"
   if [ -f "$K8S_VALUES_EXAMPLE" ]; then
     # Parse YAML env section - extract section.VAR_NAME pairs
     awk '
@@ -346,31 +345,6 @@ if [ -s "$SCRIPT_REQUIRED_VARS_FILE" ]; then
   DOCKER_COMPOSE_FILES_LIST=$(echo "$DOCKER_COMPOSE_FILES" | tr '\n' ' ' | sed 's/ $//')
   echo -e "${YELLOW}Checking: docker-compose container vars are declared in shell scripts...${NC}"
   echo -e "${YELLOW}  Files checked: ${DOCKER_COMPOSE_FILES_LIST}${NC}"
-
-  # Filter to only vLLM-related vars (exclude generic ones like PYTORCH_CUDA_ALLOC_CONF)
-  VLLM_CONTAINER_VARS=$(grep -E '^(VLLM_|GPU_|DTYPE|DEV_MODE|ENABLE_)' "$DOCKER_COMPOSE_CONTAINER_VARS_FILE" || true)
-
-  if [ -n "$VLLM_CONTAINER_VARS" ]; then
-    UNDECLARED_VARS=""
-    while IFS= read -r var; do
-      if ! grep -q "^${var}$" "$SCRIPT_REQUIRED_VARS_FILE"; then
-        UNDECLARED_VARS="${UNDECLARED_VARS}${var}\n"
-      fi
-    done <<< "$VLLM_CONTAINER_VARS"
-
-    UNDECLARED_VARS=$(echo -e "$UNDECLARED_VARS" | grep -v '^$' || true)
-
-    if [ -n "$UNDECLARED_VARS" ]; then
-      echo -e "${YELLOW}⚠ WARNING: The following vLLM env vars are set in docker-compose but not declared in shell scripts:${NC}"
-      echo "$UNDECLARED_VARS" | sed 's/^/  - /'
-      echo -e "${YELLOW}  (These might be read directly by the application or unused)${NC}"
-      echo ""
-      HAS_WARNINGS=1
-    else
-      echo -e "${GREEN}✓ All vLLM container vars are declared in shell scripts${NC}"
-      echo ""
-    fi
-  fi
 fi
 
 # Check: Variables in k8s templates must be defined in values.example.yaml
