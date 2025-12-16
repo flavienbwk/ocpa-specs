@@ -114,11 +114,12 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 - **OCPA-R17**: any port open in each service must be listed in the `exposed` property but internal services that should not be exposed must not use the `ports` property (e.g, databases, redis...) ;
 - **OCPA-R19**: services that must be exposed (using the `ports` property) must use an environment variable to flexibly adapt different environments (dev, staging, prod) ;
 - **OCPA-R20**: any environment variable used inside a service must be listed in the `environments` property (respectively a configmap or similar for its Kubernetes configuration): this makes sure each environment variable is defined intentionally and introducing a new one is noticed ;
-- **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv()`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20) ;
+- **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv()`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20, `./scripts/validate-envs.sh`) ;
+- **OCPA-R22**: repository must include a LICENSE file or state the repo's license details in README.md (e.g, proprietary, MIT) ;
 
 ### Auto-Pull (CRON)
 
-For automated deployments, set up a CRON job:
+For automated production deployments, set up a CRON job:
 
 ```bash
 # Add to crontab
