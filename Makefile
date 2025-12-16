@@ -5,7 +5,7 @@
 .PHONY: dev dev-build dev-up dev-restart dev-down \
         build up restart down \
         prod prod-build prod-up prod-restart prod-down \
-        helm-deploy helm-uninstall downa
+        test helm-deploy helm-uninstall downa
 
 # Dev environment (default aliases)
 dev: dev-up
@@ -42,6 +42,11 @@ prod-restart:
 
 prod-down:
 	docker compose -f compose.prod.yml down
+
+# Test environment
+test:
+	docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from test
+	docker compose -f compose.test.yml down
 
 # Helm commands
 helm-deploy:

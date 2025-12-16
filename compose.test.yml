@@ -1,0 +1,44 @@
+# Test environment
+# Usage: make test
+
+services:
+  markserv:
+    extends:
+      file: compose.base.yml
+      service: markserv-base
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      target: prod
+    # OCPA-R14: Restart policy
+    restart: "no"
+
+  test:
+    # OCPA-R1: Fixed version
+    image: curlimages/curl:8.11.0
+    # OCPA-R16: Cross-platform compatibility
+    platform: linux/amd64
+    depends_on:
+      markserv:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        echo "Running tests..."
+        echo ""
+        echo "Test 1: Check server responds"
+        curl -sf http://markserv:8642/ > /dev/null || { echo "FAIL: Server not responding"; exit 1; }
+        echo "PASS: Server responds"
+        echo ""
+        echo "Test 2: Check README.md content contains OCPA"
+        curl -sf http://markserv:8642/README.md | grep -q "OCPA" || { echo "FAIL: OCPA not found in README"; exit 1; }
+        echo "PASS: OCPA found in README"
+        echo ""
+        echo "Test 3: Check docs image is accessible"
+        curl -sf http://markserv:8642/docs/flexible_flow_git.jpg -o /dev/null || { echo "FAIL: Image not accessible"; exit 1; }
+        echo "PASS: Image accessible"
+        echo ""
+        echo "================================"
+        echo "All tests passed!"
+        echo "================================"

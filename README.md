@@ -33,7 +33,8 @@ This helps spread the word and builds a community of standardized, well-structur
 ├── .github/workflows
 │   ├── build-push.yml      // Checks dev/prod build and pushes images to desired registry with appropriate tags depending on branch
 │   ├── deploy.yml          // Deploys the Helm chart (K8s) of your app
-│   └── linters.yml         // Include your project linters (envvars checks, secrets checks, markdownlint...)
+│   ├── linters.yml         // Include your project linters (envvars checks, secrets checks, markdownlint...)
+│   └── test.yml            // Runs integration tests (make test)
 ├── service_1 (e.g, api)
 │   ├── Dockerfile          // includes "dev" and "prod" targets
 │   └── src
@@ -47,10 +48,12 @@ This helps spread the word and builds a community of standardized, well-structur
 │   ├── auto-pull.sh        // Must be called by a CRON job to auto-pull and redeploy the project on release branch push
 │   ├── deploy-helm.sh      // Script that handles all the additional logics for Helm deployment (used by deploy.yml and make commands)
 │   └── validate-envs.sh    // Used in CI to check for missing, inconsistent or invalid env variables
-├── .env.example            // Your single source of truth for env variables
-├── compose.prod.yml        // all-in-one production-ready (and secured) stack - can be tested locally
-├── compose.dev.yml         // all-in-one dev-ready hot-reload-enabled stack - tailored for local dev
-├── Makefile                // Standardize commands to start dev or prod software, or deploy the project 
+├── .env.example            // Your single source of truth for host-side env variables
+├── compose.base.yml        // Shared base services configuration (extended by dev/prod/test via `extends`)
+├── compose.dev.yml         // Dev environment - extends base, adds hot-reload volumes
+├── compose.prod.yml        // Prod environment - extends base, uses stricter restart policy
+├── compose.test.yml        // Test environment - extends base, runs integration tests
+├── Makefile                // Standardize commands to start dev or prod software, or deploy the project
 ├── README.md               // Documentation entrypoint
 └── VERSION                 // Current software version, can be suffixed by -alpha or -beta
 ```

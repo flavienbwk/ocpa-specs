@@ -1,0 +1,47 @@
+# Build and push workflow
+# Checks dev/prod build and pushes images to desired registry with appropriate tags
+
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - release
+  pull_request:
+    branches:
+      - main
+      - release
+
+jobs:
+  build-dev:
+    name: Build (dev)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy env file
+        run: cp .env.example .env
+
+      - name: Build dev image
+        run: make build
+
+  build-prod:
+    name: Build (prod)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy env file
+        run: cp .env.example .env
+
+      - name: Build prod image
+        run: make prod-build

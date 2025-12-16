@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install markserv with fixed version
 # OCPA-R1: Fixed version for markserv
-RUN npm install -g markserv@1.19.0
+RUN npm install -g markserv@1.17.4
 
 # Install wget for healthcheck
 RUN apk add --no-cache wget

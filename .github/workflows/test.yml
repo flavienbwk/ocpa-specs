@@ -1,0 +1,31 @@
+# Test workflow
+# Runs integration tests
+
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - release
+  pull_request:
+    branches:
+      - main
+      - release
+
+jobs:
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy env file
+        run: cp .env.example .env
+
+      - name: Run tests
+        run: make test
