@@ -64,9 +64,9 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 
 If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respect OCPA-R7..R9 and create two organization teams:
 
-- Administrators: have settings permissions privileges for all repos ;
-- Leaders: can contribute to repos and validate PRs ;
-- Developers: can contribute to repos (feature branches).
+- _Administrators_: have settings permissions privileges for all repos ;
+- _Leaders_: can contribute to repos and validate PRs ;
+- _Developers_: can contribute to repos (feature branches).
 
 ## Rules
 
@@ -76,8 +76,8 @@ If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respe
 - **OCPA-R4**: Use [Flexible Flow](https://book-devops.berwick.fr/eng/index.html#flexible-flow-a-balanced-git-workflow) as git workflow ;
 - **OCPA-R5**: All pull requests must be prefixed by the issue number (e.g., `#38: Solving SEO problem`): this helps keeping track of the context for the commit ;
 - **OCPA-R6**: Every commit message should be prefixed by issue number (e.g., `#38: Added better meta description`): this helps keeping track of the context for the commit ;
-- **OCPA-R7**: Repo must be configured to squash a pull request commits on a feature branch merge to `main`;
-- **OCPA-R8**: Repo must be configured to forbid force-push on `main` and `release` branches ;
+- **OCPA-R7**: Repo must be configured to squash a pull request commits on a feature branch merge to `main` ;
+- **OCPA-R8**: Repo must be configured to forbid force-push on `main` and `release` branches. Each PR must also be validate by 1 to ideally 2 _Leaders_ group members ;
 - **OCPA-R9**: Repo must be configured to forbid force-merge on any branch, pipelines must succeed. If they are too slow, work on quickening them up! ;
 - **OCPA-R10**: each service in compose file must declare logging limits, to avoid filling storage indefinitely with time ;
 
