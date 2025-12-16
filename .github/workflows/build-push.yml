@@ -1,5 +1,6 @@
 # Build and push workflow
 # Checks dev/prod build and pushes images to desired registry with appropriate tags
+# Tags: main branch -> develop + sha, release branch -> latest + sha
 
 name: Build
 
@@ -12,6 +13,9 @@ on:
     branches:
       - main
       - release
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
   build-dev:
@@ -31,8 +35,11 @@ jobs:
         run: make build
 
   build-prod:
-    name: Build (prod)
+    name: Build and Push (prod)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,5 +50,27 @@ jobs:
       - name: Copy env file
         run: cp .env.example .env
 
-      - name: Build prod image
+      - name: Build prod images
         run: make prod-build
+
+      - name: Log in to Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine tag
+        if: github.event_name == 'push'
+        id: tag
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "tag=develop" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.ref }}" = "refs/heads/release" ]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push images
+        if: github.event_name == 'push'
+        run: ./scripts/build-push.sh "${{ env.REGISTRY }}" "${{ github.repository }}" "${{ steps.tag.outputs.tag }}" "sha-${{ github.sha }}"
