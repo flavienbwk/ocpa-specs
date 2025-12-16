@@ -99,7 +99,7 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 
 - **OCPA-R12**: Don't define a compose network for your resources unless filling a specific purpose: it is often useless as compose already creates a network by default for your deployment ;
 
-    Avoid this:
+    Avoid this if not intentionally required:
 
     ```yml
     networks:
@@ -113,8 +113,8 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 - **OCPA-R16**: set `platform` property for each service for project's cross-platform compatibility (e.g., `platform: linux/amd64` for Apple Silicon) ;
 - **OCPA-R17**: any port open in each service must be listed in the `exposed` property but internal services that should not be exposed must not use the `ports` property (e.g, databases, redis...) ;
 - **OCPA-R19**: services that must be exposed (using the `ports` property) must use an environment variable to flexibly adapt different environments (dev, staging, prod) ;
-- **OCPA-R20**: any environment variable used inside a service must be listed in the `environments` property (respectively a configmap or similar for its Kubernetes configuration): this makes sure each environment variable is defined intentionnally and introducing a new one is noticed ;
-- **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv('DB_HOST')`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20) ;
+- **OCPA-R20**: any environment variable used inside a service must be listed in the `environments` property (respectively a configmap or similar for its Kubernetes configuration): this makes sure each environment variable is defined intentionally and introducing a new one is noticed ;
+- **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv()`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20) ;
 
 ### Auto-Pull (CRON)
 
