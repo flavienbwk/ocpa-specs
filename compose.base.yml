@@ -1,10 +1,34 @@
-# Shared services env variables across compose files.
+# Shared base services configuration across compose files.
 #
-# One place to declare env vars for each environment:
+# Defines base services that are extended by environment-specific compose files:
 #   - dev (compose.dev.yml)
 #   - prod (compose.prod.yml)
 #   - test (compose.test.yml)
 #
-# You can still declare environment-specific env variables in each compose file.
+# Each environment file uses `extends` to inherit from base services defined here,
+# then overrides or adds environment-specific configuration (build target, ports, volumes...).
 
-
+services:
+  markserv-base:
+    # OCPA-R16: Cross-platform compatibility
+    platform: linux/amd64
+    # OCPA-R10: Logging limits
+    logging:
+      options:
+        max-size: "1m"
+    # OCPA-R17: Exposed ports (internal)
+    expose:
+      - "8642"
+    # OCPA-R19: Port using environment variable
+    ports:
+      - "${MARKSERV_PORT:-8080}:8642"
+    # OCPA-R13: Healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8642"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # OCPA-R20: In-container environment variables
+    environment:
+      PORT: 8642

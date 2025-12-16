@@ -7,15 +7,15 @@
 # DESCRIPTION:
 #   Validates consistency of environment variables across the project:
 #   - .env.example (source of truth for host-side configuration)
-#   - compose*.yml files (container environment mappings)
+#   - compose.base.yml (single source of truth for container environment mappings)
 #   - Shell scripts (required env vars declared with : "${VAR:?}")
 #   - Kubernetes Helm chart (k8s/values.example.yaml and templates)
 #
 # VALIDATIONS PERFORMED:
-#   1. Variables in docker-compose ${VAR} refs must be in .env.example
+#   1. Variables in compose.base.yml ${VAR} refs must be in .env.example
 #   2. Required vars in shell scripts must be defined somewhere:
 #      - In .env.example (for host-side scripts)
-#      - Or in docker-compose container environment (for container scripts)
+#      - Or in compose.base.yml container environment (for container scripts)
 #   3. K8s template .Values.env.* refs must be in k8s/values.example.yaml
 #   4. Warnings for unused/undeclared variables
 #
@@ -166,38 +166,42 @@ TOTAL_ENV_EXAMPLE=$(wc -l < "$ENV_EXAMPLE_VARS_FILE")
 echo -e "${GREEN}✓ Found ${TOTAL_ENV_EXAMPLE} variables in .env.example${NC}"
 echo ""
 
-echo -e "${YELLOW}Step 3: Extracting variables from docker-compose files...${NC}"
+echo -e "${YELLOW}Step 3: Extracting variables from compose.base.yml...${NC}"
 
-# Extract from docker-compose.yml (variables referenced as ${VAR})
+# Extract from compose.base.yml (single source of truth for env vars)
+# Variables referenced as ${VAR} or ${VAR:-default}
 # Exclude double-dollar-sign variables ($${VAR}) which are escaped and not substituted
-# Exclude compose.test.yml
-find . -maxdepth 1 -type f \( -name "compose*.yml" -o -name "compose*.yaml" \) \
-  ! -name "compose.test.yml" -exec grep -oh \
-  '[^$]\${[A-Z_][A-Z0-9_]*}' \
-  {} + 2>/dev/null | \
-  sed -E 's/.\$\{([A-Z_][A-Z0-9_]*)\}/\1/' | \
-  sort -u > "$DOCKER_COMPOSE_VARS_FILE" || true
+COMPOSE_BASE_FILE="./compose.base.yml"
+if [ -f "$COMPOSE_BASE_FILE" ]; then
+  grep -oE '\$\{[A-Z_][A-Z0-9_]*(:-[^}]*)?\}' "$COMPOSE_BASE_FILE" 2>/dev/null | \
+    grep -v '^\$\$' | \
+    sed -E 's/\$\{([A-Z_][A-Z0-9_]*)(:-[^}]*)?\}/\1/' | \
+    sort -u > "$DOCKER_COMPOSE_VARS_FILE" || true
+else
+  echo -e "${YELLOW}⚠ compose.base.yml not found${NC}"
+  touch "$DOCKER_COMPOSE_VARS_FILE"
+fi
 
 TOTAL_DOCKER=$(wc -l < "$DOCKER_COMPOSE_VARS_FILE")
-echo -e "${GREEN}✓ Found ${TOTAL_DOCKER} variables referenced in docker-compose files${NC}"
+echo -e "${GREEN}✓ Found ${TOTAL_DOCKER} variables referenced in compose.base.yml${NC}"
 echo ""
 
-echo -e "${YELLOW}Step 4: Extracting container-internal env vars from docker-compose services...${NC}"
+echo -e "${YELLOW}Step 4: Extracting container-internal env vars from compose.base.yml...${NC}"
 
-# Find docker-compose files to check (exclude compose.test.yml)
-DOCKER_COMPOSE_FILES=$(find . -maxdepth 1 -type f \( -name "compose*.yml" -o -name "compose*.yaml" \) \
-  ! -name "compose.test.yml" | sort)
-
-# Extract container-internal env vars (the KEY part of "KEY: value" in environment sections)
-# These are the env vars that will be available INSIDE containers (used by init.sh)
-# Exclude compose.test.yml
-echo "$DOCKER_COMPOSE_FILES" | xargs grep -E '^\s+[A-Z_][A-Z0-9_]*:\s' 2>/dev/null | \
-  grep -v '^\s*#' | \
-  sed -E 's/.*\s+([A-Z_][A-Z0-9_]*):.*/\1/' | \
-  sort -u > "$DOCKER_COMPOSE_CONTAINER_VARS_FILE" || true
+# Extract container-internal env vars from compose.base.yml (single source of truth)
+# These are the KEY part of "KEY: value" in environment sections
+# They will be available INSIDE containers
+if [ -f "$COMPOSE_BASE_FILE" ]; then
+  grep -E '^\s+[A-Z_][A-Z0-9_]*:\s' "$COMPOSE_BASE_FILE" 2>/dev/null | \
+    grep -v '^\s*#' | \
+    sed -E 's/.*\s+([A-Z_][A-Z0-9_]*):.*/\1/' | \
+    sort -u > "$DOCKER_COMPOSE_CONTAINER_VARS_FILE" || true
+else
+  touch "$DOCKER_COMPOSE_CONTAINER_VARS_FILE"
+fi
 
 TOTAL_CONTAINER_VARS=$(wc -l < "$DOCKER_COMPOSE_CONTAINER_VARS_FILE")
-echo -e "${GREEN}✓ Found ${TOTAL_CONTAINER_VARS} container-internal env vars in docker-compose services${NC}"
+echo -e "${GREEN}✓ Found ${TOTAL_CONTAINER_VARS} container-internal env vars in compose.base.yml${NC}"
 echo ""
 
 echo -e "${YELLOW}Step 5: Extracting required env vars declared in shell scripts...${NC}"
@@ -297,8 +301,8 @@ else
   echo ""
 fi
 
-# Check: Variables in docker-compose not in .env.example
-echo -e "${YELLOW}Checking: Variables in docker-compose but missing from .env.example...${NC}"
+# Check: Variables in compose.base.yml not in .env.example
+echo -e "${YELLOW}Checking: Variables in compose.base.yml but missing from .env.example...${NC}"
 MISSING_DOCKER=$(comm -23 "$DOCKER_COMPOSE_VARS_FILE" "$ENV_EXAMPLE_VARS_FILE")
 
 # Filter out CI-specific variables (set dynamically by GitHub Actions workflows, not user-configurable)
@@ -306,12 +310,12 @@ MISSING_DOCKER=$(comm -23 "$DOCKER_COMPOSE_VARS_FILE" "$ENV_EXAMPLE_VARS_FILE")
 # Add more CI-only vars here if needed in the future
 
 if [ -n "$MISSING_DOCKER" ]; then
-  echo -e "${RED}✗ ERROR: The following variables are in docker-compose but not in .env.example:${NC}"
+  echo -e "${RED}✗ ERROR: The following variables are in compose.base.yml but not in .env.example:${NC}"
   echo "$MISSING_DOCKER" | sed 's/^/  - /'
   echo ""
   HAS_ERRORS=1
 else
-  echo -e "${GREEN}✓ All docker-compose variables are in .env.example${NC}"
+  echo -e "${GREEN}✓ All compose.base.yml variables are in .env.example${NC}"
   echo ""
 fi
 
@@ -340,11 +344,9 @@ if [ -s "$SCRIPT_REQUIRED_VARS_FILE" ]; then
     echo ""
   fi
 
-  # Check reverse: Container vars in docker-compose that shell scripts don't declare (warning only)
-  # Display which files are being checked
-  DOCKER_COMPOSE_FILES_LIST=$(echo "$DOCKER_COMPOSE_FILES" | tr '\n' ' ' | sed 's/ $//')
-  echo -e "${YELLOW}Checking: docker-compose container vars are declared in shell scripts...${NC}"
-  echo -e "${YELLOW}  Files checked: ${DOCKER_COMPOSE_FILES_LIST}${NC}"
+  # Check reverse: Container vars in compose.base.yml that shell scripts don't declare (warning only)
+  echo -e "${YELLOW}Checking: compose.base.yml container vars are declared in shell scripts...${NC}"
+  echo -e "${YELLOW}  File checked: ${COMPOSE_BASE_FILE}${NC}"
 fi
 
 # Check: Variables in k8s templates must be defined in values.example.yaml

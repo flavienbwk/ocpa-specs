@@ -1,0 +1,19 @@
+# Development environment with hot-reload
+# Usage: make dev
+
+services:
+  markserv:
+    extends:
+      file: compose.base.yml
+      service: markserv-base
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      # OCPA-R1: Fixed version target
+      target: dev
+    # OCPA-R14: Restart policy
+    restart: unless-stopped
+    volumes:
+      # Mount docs for hot-reload during development
+      - ./README.md:/app/README.md:ro
+      - ./docs:/app/docs:ro

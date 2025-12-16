@@ -1,0 +1,15 @@
+# Production environment
+# Usage: make prod
+
+services:
+  markserv:
+    extends:
+      file: compose.base.yml
+      service: markserv-base
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      # OCPA-R1: Fixed version target
+      target: prod
+    # OCPA-R14: Restart policy (always for production critical service)
+    restart: always
