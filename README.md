@@ -4,7 +4,7 @@
 
 [![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](./VERSION)
 
-The Opinionated Containerized Project Architecture (OCPA) is a pragmatic repository specification designed from years of experience with containerized apps.
+The Opinionated Containerized Project Architecture (OCPA) is a pragmatic repository specification designed from years of experience with containerized apps. Includes POSIX-compliant scripts.
 
 Made to provide it to your favorite AI software (for bootstraping or refactoring), it provides a standardized way of developing & deploying, allowing seamless onboarding and integration with CI/CD tools (e.g., auto-pulls). Use this README as a statement of intent.
 
@@ -23,7 +23,8 @@ This helps spread the word and builds a community of standardized, well-structur
 ## Required
 
 - Make ;
-- Docker.
+- Docker ;
+- Docker Compose.
 
 ## Architecture overview
 
@@ -48,7 +49,7 @@ This helps spread the word and builds a community of standardized, well-structur
 │   └── validate-envs.sh    // Used in CI to check for missing, inconsistent or invalid env variables
 ├── .env.example            // Your single source of truth for env variables
 ├── compose.prod.yml        // all-in-one production-ready (and secured) stack - can be tested locally
-├── compose.yml             // all-in-one dev-ready hot-reload-enabled stack
+├── compose.dev.yml         // all-in-one dev-ready hot-reload-enabled stack - tailored for local dev
 ├── Makefile                // Standardize commands to start dev or prod software, or deploy the project 
 ├── README.md               // Documentation entrypoint
 └── VERSION                 // Current software version, can be suffixed by -alpha or -beta
@@ -58,9 +59,11 @@ This helps spread the word and builds a community of standardized, well-structur
 
 OCPA v1 is well-suited to be used along with the [_Flexible Git Workflow_](https://book-devops.berwick.fr/eng/index.html#flexible-flow-a-balanced-git-workflow).
 
-Basically, the main branch is `main`, each developer creates and merge 1 feature branch per issue and deployment gets triggered by a pull request to the `release` branch:
+Workflow summarized: the main branch is `main`, each developer creates and merges 1 feature branch per issue and deployment gets triggered by a pull request to the `release` branch:
 
-![Flexible git workflow schematic by Flavien BERWICK](https://book-devops.berwick.fr/eng/images/flexible_flow_git.jpg)
+![Flexible git workflow schematic by Flavien BERWICK](./docs/flexible_flow_git.jpg)
+
+Each push to `main` will lead to the deployment of your staging environment (e.g, `demo.mywebsite.com`), and a merge to `release` will trigger production deployment (e.g., `mywebsite.com`)
 
 If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respect OCPA-R7..R9 and create two organization teams:
 
@@ -122,6 +125,9 @@ If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respe
 - **OCPA-R20**: any environment variable used inside a service must be listed in the `environments` property (respectively a configmap or similar for its Kubernetes configuration): this makes sure each environment variable is defined intentionally and introducing a new one is noticed ;
 - **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv()`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20, `./scripts/validate-envs.sh`) ;
 - **OCPA-R22**: repository must include a LICENSE file or state the repo's license details in README.md (e.g, proprietary, MIT) ;
+- **OCPA-R23**: there's no default `compose.yml` file and each compose file has a prefix to avoid deployment mistakes, making sure the user intentionally targets the right environment using `make` commands instead of compose commands directly ;
+- **OCPA-R24**: each shell/bash script in `./scripts` or code in `Makefile` must be POSIX-compliant to allow maximum cross-compatibility and avoid CI pipelines errors ;
+- **OCPA-R25**: use pre-commit script `./scripts/pre-commit` to help preserve maximum maintainability in your repo ;
 
 ### Auto-Pull (CRON)
 
@@ -130,4 +136,12 @@ For automated production deployments, set up a CRON job:
 ```bash
 # Add to crontab
 */5 * * * * /path/to/project/scripts/auto-pull.sh >> /path/to/project/scripts/auto-pull.log 2>&1
+```
+
+### Pre-commit Hooks
+
+Install the pre-commit hook to validate environment variables before each commit:
+
+```bash
+ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
 ```

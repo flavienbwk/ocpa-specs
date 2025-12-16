@@ -1,0 +1,10 @@
+# Shared services env variables across compose files.
+#
+# One place to declare env vars for each environment:
+#   - dev (compose.dev.yml)
+#   - prod (compose.prod.yml)
+#   - test (compose.test.yml)
+#
+# You can still declare environment-specific env variables in each compose file.
+
+

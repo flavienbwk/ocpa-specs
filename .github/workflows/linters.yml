@@ -43,11 +43,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # TODO: Install dependencies, run lint, type-check, unit tests, etc.
       - name: Placeholder - run static analysis suite
         run: echo "🔍 Running lint & tests… (to be implemented)"
 
-  validate-env-vars:
+  check-envs:
     name: Validate Environment Variables
     runs-on: ubuntu-24.04
     steps:

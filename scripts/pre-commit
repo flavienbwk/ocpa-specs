@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Pre-commit hook for OCPA projects
+# Runs validate-envs.sh before each commit to ensure environment variables are consistent
+#
+# Installation:
+#   ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+#
+
+set -e
+
+# Get the root directory of the git repository
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "Running environment variables validation..."
+
+# Run validate-envs.sh with SCAN_DIRS if defined, otherwise run without it
+if [ -n "$SCAN_DIRS" ]; then
+    SCAN_DIRS="$SCAN_DIRS" "$REPO_ROOT/scripts/validate-envs.sh"
+else
+    # Default: scan scripts directory
+    SCAN_DIRS="./scripts" "$REPO_ROOT/scripts/validate-envs.sh"
+fi
+
+echo "Pre-commit checks passed!"
