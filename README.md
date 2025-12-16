@@ -62,6 +62,12 @@ Basically, the main branch is `main`, each developer creates and merge 1 feature
 
 ![Flexible git workflow schematic by Flavien BERWICK](https://book-devops.berwick.fr/eng/images/flexible_flow_git.jpg)
 
+If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respect OCPA-R7..R9 and create two organization teams:
+
+- Administrators: have settings permissions privileges for all repos ;
+- Leaders: can contribute to repos and validate PRs ;
+- Developers: can contribute to repos (feature branches).
+
 ## Rules
 
 - **OCPA-R1**: All versions must be fixed: mandatory lock files or hard-coded (whether for code packages or CI references). Also use specific versions instead of `latest` tags. ;
