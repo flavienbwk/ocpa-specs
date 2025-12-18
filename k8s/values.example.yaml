@@ -1,0 +1,51 @@
+# OCPA Helm Values
+# Copy to values.yaml and substitute variables using envsubst
+# Variables use ${VAR} syntax for envsubst substitution
+
+# Image configuration
+image:
+  registry: ${IMAGE_REGISTRY:-ghcr.io}
+  repository: ${IMAGE_REPOSITORY}
+  tag: ${IMAGE_TAG:-latest}
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8642
+
+# Ingress configuration
+ingress:
+  enabled: ${INGRESS_ENABLED:-false}
+  className: ${INGRESS_CLASS:-nginx}
+  host: ${INGRESS_HOST:-markserv.local}
+  tls:
+    enabled: ${INGRESS_TLS_ENABLED:-false}
+    secretName: ${INGRESS_TLS_SECRET:-markserv-tls}
+
+# Application configuration
+app:
+  port: ${MARKSERV_PORT:-8642}
+  some_example_env: ${SOME_EXAMPLE_ENV}
+
+# Resources (OCPA best practices)
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Replicas
+replicaCount: ${REPLICAS:-1}
+
+# Health checks
+healthcheck:
+  enabled: true
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3

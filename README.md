@@ -40,19 +40,19 @@ This helps spread the word and builds a community of standardized, well-structur
 │   └── src
 ├── [...]                   // other services (e.g., app)
 ├── docs                    // For markdown resources
-├── k8s                     // Helm template with production-ready configuration tailored for variables substitution
-│   ├── Chart.yml
+├── k8s                     // Helm chart with production-ready configuration tailored for envsubst variables substitution
+│   ├── Chart.yaml
 │   ├── templates
-│   ├── values.example.yaml
+│   └── values.example.yaml
 ├── scripts
 │   ├── auto-pull.sh        // Must be called by a CRON job to auto-pull and redeploy the project on release branch push
 │   ├── deploy-helm.sh      // Script that handles all the additional logics for Helm deployment (used by deploy.yml and make commands)
 │   └── validate-envs.sh    // Used in CI to check for missing, inconsistent or invalid env variables
 ├── .env.example            // Your single source of truth for host-side env variables
 ├── compose.base.yml        // Shared base services configuration (extended by dev/prod/test via `extends`)
-├── compose.dev.yml         // Dev environment - extends base, adds hot-reload volumes
-├── compose.prod.yml        // Prod environment - extends base, uses stricter restart policy
-├── compose.test.yml        // Test environment - extends base, runs integration tests
+├── compose.dev.yml         // Dev environment - extends base, set image name and build context, adds hot-reload volumes
+├── compose.prod.yml        // Prod environment - extends base, set image name and build context, no volume mounts
+├── compose.test.yml        // Test environment - extends base, set image name and build context, runs integration tests
 ├── Makefile                // Standardize commands to start dev or prod software, or deploy the project
 ├── README.md               // Documentation entrypoint
 └── VERSION                 // Current software version, can be suffixed by -alpha or -beta
@@ -73,6 +73,11 @@ If your git forge (e.g., GitHub, GitLab) allows it, configure your repo to respe
 - _Administrators_: have settings permissions privileges for all repos ;
 - _Leaders_: can contribute to repos and validate PRs ;
 - _Developers_: can contribute to repos (feature branches).
+
+For deployment:
+
+- For docker-compose-based deployment, setup [`scripts/auto-pull.sh`](./scripts/auto-pull.sh) on your machine (pull-based) ;
+- For Kubernetes-based deployment, set GitHub secret `KUBE_CONFIG` and use the `deploy.yml` CI (push-based).
 
 ## Rules
 
@@ -147,4 +152,25 @@ Install the pre-commit hook to validate environment variables before each commit
 
 ```bash
 ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+```
+
+### Kubernetes Deployment
+
+The `./k8s` directory contains a Helm chart. Variables in `values.example.yaml` use `${VAR}` syntax for `envsubst` substitution.
+
+**GitHub Secrets required:**
+
+- `KUBE_CONFIG`: Base64-encoded kubeconfig (`cat ~/.kube/config | base64 -w0`)
+
+**GitHub Environment Variables (optional):**
+
+- `INGRESS_ENABLED`, `INGRESS_CLASS`, `INGRESS_HOST`, `INGRESS_TLS_ENABLED`, `INGRESS_TLS_SECRET`
+- `MARKSERV_PORT`, `REPLICAS`
+
+**Local deployment:**
+
+```bash
+export IMAGE_REPOSITORY=ghcr.io/myorg/myrepo/markserv
+export IMAGE_TAG=latest
+make helm-deploy
 ```

@@ -1,0 +1,96 @@
+# Deploy workflow
+# Deploys the Helm chart to Kubernetes cluster
+# Triggered on push to release branch (production) or main branch (staging)
+
+name: Deploy
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  #     - release
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-24.04
+    environment: ${{ github.ref == 'refs/heads/release' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Verify cluster connection
+        run: kubectl cluster-info
+
+      - name: Determine deployment parameters
+        id: params
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/release" ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "image_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "namespace=production" >> "$GITHUB_OUTPUT"
+            echo "release_name=ocpa-specs-prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=staging" >> "$GITHUB_OUTPUT"
+            echo "image_tag=develop" >> "$GITHUB_OUTPUT"
+            echo "namespace=staging" >> "$GITHUB_OUTPUT"
+            echo "release_name=ocpa-specs-staging" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy with Helm
+        env:
+          # Image configuration
+          IMAGE_REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_REPOSITORY: ${{ github.repository }}/markserv
+          IMAGE_TAG: ${{ steps.params.outputs.image_tag }}
+          # Ingress configuration (override via GitHub environment secrets)
+          INGRESS_ENABLED: ${{ vars.INGRESS_ENABLED || 'false' }}
+          INGRESS_CLASS: ${{ vars.INGRESS_CLASS || 'nginx' }}
+          INGRESS_HOST: ${{ vars.INGRESS_HOST || 'markserv.local' }}
+          INGRESS_TLS_ENABLED: ${{ vars.INGRESS_TLS_ENABLED || 'false' }}
+          INGRESS_TLS_SECRET: ${{ vars.INGRESS_TLS_SECRET || 'markserv-tls' }}
+          # Application configuration
+          MARKSERV_PORT: ${{ vars.MARKSERV_PORT || '8642' }}
+          REPLICAS: ${{ vars.REPLICAS || '1' }}
+        run: |
+          ./scripts/deploy-helm.sh deploy \
+            "${{ steps.params.outputs.release_name }}" \
+            "${{ steps.params.outputs.namespace }}"
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Environment**: ${{ steps.params.outputs.environment }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Release**: ${{ steps.params.outputs.release_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Namespace**: ${{ steps.params.outputs.namespace }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image Tag**: ${{ steps.params.outputs.image_tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Deployed Resources" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          kubectl get all -n "${{ steps.params.outputs.namespace }}" -l "app=${{ steps.params.outputs.release_name }}-markserv" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "Resources pending..." >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"

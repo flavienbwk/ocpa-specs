@@ -1,0 +1,7 @@
+# OCPA Helm Chart
+apiVersion: v2
+name: ocpa-specs
+description: Helm chart for OCPA specifications demo (markserv)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

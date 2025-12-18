@@ -68,3 +68,59 @@ jobs:
             /tmp/env-*.txt
           retention-days: 7
           if-no-files-found: ignore
+
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
+
+      - name: Lint Helm chart
+        run: helm lint ./k8s
+
+      - name: Template validation (dry-run)
+        run: |
+          # Generate values.yaml with placeholder values for template validation
+          cat > ./k8s/values.yaml << 'EOF'
+          image:
+            registry: ghcr.io
+            repository: test/repo/markserv
+            tag: latest
+            pullPolicy: IfNotPresent
+          service:
+            type: ClusterIP
+            port: 80
+            targetPort: 8642
+          ingress:
+            enabled: false
+            className: nginx
+            host: markserv.local
+            tls:
+              enabled: false
+              secretName: markserv-tls
+          app:
+            port: 8642
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          replicaCount: 1
+          healthcheck:
+            enabled: true
+            path: /
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          EOF
+          helm template test ./k8s -f ./k8s/values.yaml
+          rm ./k8s/values.yaml

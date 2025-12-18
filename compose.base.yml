@@ -32,3 +32,4 @@ services:
     # OCPA-R20: In-container environment variables
     environment:
       PORT: 8642
+      SOME_EXAMPLE_ENV: ${SOME_EXAMPLE_ENV}

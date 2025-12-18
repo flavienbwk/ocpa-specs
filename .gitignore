@@ -1,1 +1,4 @@
 .env
+
+# Generated Helm values (from values.example.yaml via envsubst)
+k8s/values.yaml
