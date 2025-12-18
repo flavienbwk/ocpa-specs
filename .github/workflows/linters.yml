@@ -81,12 +81,8 @@ jobs:
         with:
           version: '3.14.0'
 
-      - name: Lint Helm chart
-        run: helm lint ./k8s
-
-      - name: Template validation (dry-run)
+      - name: Generate values.yaml for linting
         run: |
-          # Generate values.yaml with placeholder values for template validation
           cat > ./k8s/values.yaml << 'EOF'
           image:
             registry: ghcr.io
@@ -122,5 +118,12 @@ jobs:
             timeoutSeconds: 10
             failureThreshold: 3
           EOF
-          helm template test ./k8s -f ./k8s/values.yaml
-          rm ./k8s/values.yaml
+
+      - name: Lint Helm chart
+        run: helm lint ./k8s
+
+      - name: Template validation (dry-run)
+        run: helm template test ./k8s -f ./k8s/values.yaml
+
+      - name: Cleanup
+        run: rm ./k8s/values.yaml
