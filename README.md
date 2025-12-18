@@ -12,8 +12,6 @@ If your project follows the OCPA specifications, add this badge to your README t
 [![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/flavienbwk/ocpa-specs)
 ```
 
-[![OCPA: v1](https://img.shields.io/badge/OCPA-v1-blue.svg)](https://github.com/flavienbwk/ocpa-specs)
-
 This helps spread the word and builds a community of standardized, well-structured containerized projects.
 
 ## Required
