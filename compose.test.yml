@@ -1,5 +1,5 @@
-# Test environment
-# Usage: make test
+# Test stack tailored for exiting 0 on succeeding tests and non-0 on failing ones
+# Usage: "make test"
 
 services:
   markserv:
