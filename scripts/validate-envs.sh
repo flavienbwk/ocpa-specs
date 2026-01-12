@@ -104,6 +104,19 @@ else
     fi
   done
 
+  # Extract env vars from TypeScript/JavaScript code
+  # Patterns: process.env.VAR_NAME, process.env['VAR_NAME'], process.env["VAR_NAME"]
+  for dir in "${DIRS_ARRAY[@]}"; do
+    dir=$(echo "$dir" | xargs)  # Trim whitespace
+    if [ -d "$dir" ]; then
+      find "$dir" -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+        -not -path "*/node_modules/*" -not -path "*/.next/*" -exec grep -ohE \
+        'process\.env\.[A-Z_][A-Z0-9_]*|process\.env\[['"'"'"][A-Z_][A-Z0-9_]*['"'"'"]\]' \
+        {} + 2>/dev/null | \
+        sed -E "s/process\.env\.([A-Z_][A-Z0-9_]*)/\1/; s/process\.env\[['\"]([A-Z_][A-Z0-9_]*)['\"]]/\1/" >> "$USED_VARS_FILE" || true
+    fi
+  done
+
   # Extract env vars from Shell scripts
   # Only detect explicitly declared env vars using the pattern: : "${VAR_NAME:?..."
   # This pattern is used at the top of scripts to document and validate required env vars.
@@ -282,18 +295,26 @@ echo -e "${BLUE}  Validation Results${NC}"
 echo -e "${BLUE}================================================${NC}"
 echo ""
 
-# Check: Variables used in code but missing from .env.example
+# Check: Variables used in code but missing from .env.example OR compose container env
+# Code running in containers can access vars from either source
 if [ -n "$SCAN_DIRS" ]; then
-  echo -e "${YELLOW}Checking: Variables in code but missing from .env.example...${NC}"
-  MISSING_IN_ENV_EXAMPLE=$(comm -23 "$USED_VARS_FILE" "$ENV_EXAMPLE_VARS_FILE")
+  echo -e "${YELLOW}Checking: Variables in code are defined in .env.example or compose.base.yml...${NC}"
 
-  if [ -n "$MISSING_IN_ENV_EXAMPLE" ]; then
-    echo -e "${RED}✗ ERROR: The following variables are used in code but not in .env.example:${NC}"
-    echo "$MISSING_IN_ENV_EXAMPLE" | sed 's/^/  - /'
+  # Combine .env.example vars and docker-compose container vars as valid sources
+  ALL_VALID_VARS_FILE=$(mktemp)
+  cat "$ENV_EXAMPLE_VARS_FILE" "$DOCKER_COMPOSE_CONTAINER_VARS_FILE" 2>/dev/null | sort -u > "$ALL_VALID_VARS_FILE"
+
+  MISSING_IN_ENV=$(comm -23 "$USED_VARS_FILE" "$ALL_VALID_VARS_FILE")
+  rm -f "$ALL_VALID_VARS_FILE"
+
+  if [ -n "$MISSING_IN_ENV" ]; then
+    echo -e "${RED}✗ ERROR: The following variables are used in code but not defined anywhere:${NC}"
+    echo "$MISSING_IN_ENV" | sed 's/^/  - /'
+    echo -e "${YELLOW}  Fix: Add to .env.example (host) or compose.base.yml environment (container)${NC}"
     echo ""
     HAS_ERRORS=1
   else
-    echo -e "${GREEN}✓ All code variables are in .env.example${NC}"
+    echo -e "${GREEN}✓ All code variables are defined in .env.example or compose.base.yml${NC}"
     echo ""
   fi
 else

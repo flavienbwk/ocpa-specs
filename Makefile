@@ -29,13 +29,13 @@ restart: dev-restart
 down: dev-down
 
 # Prod environment
-prod: prod-up
+prod: prod-build prod-up
 
 prod-build:
 	docker compose -f compose.prod.yml build
 
 prod-up:
-	docker compose -f compose.prod.yml up -d --build
+	docker compose -f compose.prod.yml up -d
 
 prod-restart:
 	docker compose -f compose.prod.yml restart
