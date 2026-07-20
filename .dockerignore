@@ -6,7 +6,7 @@
 .gitignore
 .github
 
-# Host env & secrets — never bake these into image layers
+# Host env and secrets. Never bake these into image layers
 .env
 .env.*
 
