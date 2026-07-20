@@ -86,6 +86,9 @@ For deployment:
 - **OCPA-R9**: Repo must be configured to forbid force-merge on any branch, pipelines must succeed. If they are too slow, work on quickening them up! ;
 - **OCPA-R10**: each service in compose file must declare logging limits, to avoid filling storage indefinitely with time ;
 
+    <details closed>
+    <summary>Example</summary>
+
     ```bash
     myapp:
         logging:
@@ -93,7 +96,12 @@ For deployment:
                 max-size: "1m"
     ```
 
+    </details>
+
 - **OCPA-R11**: no trailing space nor inline comment in env variables, to avoid inconsistent processing of envs trailing spaces and comments among software ;
+
+    <details closed>
+    <summary>Examples</summary>
 
     Example of wrong declaration:
 
@@ -108,7 +116,12 @@ For deployment:
     POSTGRES_PASSWORD=mysuperpassword
     ```
 
+    </details>
+
 - **OCPA-R12**: Don't define a compose network for your resources unless filling a specific purpose: it is often useless as compose already creates a network by default for your deployment ;
+
+    <details closed>
+    <summary>Example</summary>
 
     Avoid this if not intentionally required:
 
@@ -118,11 +131,63 @@ For deployment:
             driver: bridge
     ```
 
+    </details>
+
 - **OCPA-R13**: set healthchecks for each service: it lets orchestrators automatically detect and replace unhealthy containers, ensuring service availability ;
 - **OCPA-R14**: set `restart: always|unless-stopped` property so your services restart after computer's reset. Prefer using `unless-stopped` by default or `always` if your service is critical (e.g., reverse proxy, monitoring agent) ;
 - **OCPA-R15**: don't set `container_name`s until specifically required for your use case: docker already establishes a DNS record from service names inside the compose deployment ;
 - **OCPA-R16**: set `platform` property for each service for project's cross-platform compatibility (e.g., `platform: linux/amd64` for Apple Silicon) ;
 - **OCPA-R17**: any port open in each service must be listed in the `exposed` property but internal services that should not be exposed must not use the `ports` property (e.g, databases, redis...) ;
+- **OCPA-R18**: containers must run as a **non-root** user so a container escape or application RCE doesn't map to a privileged, host-adjacent user. How you reach that differs for images **you build** versus **third-party stateful services you only run**:
+
+    <details closed>
+    <summary>Details and examples</summary>
+
+    **Images you build (your application).** Set the non-root `USER` in the Dockerfile `prod` target. **Development** images should _not_ bake a fixed non-root user: a container UID that differs from the host developer's UID is exactly what makes bind-mounted, container-generated directories (`node_modules`, `__pycache__`, `vendor/`, build output...) impossible to remove for the logged-in user without `sudo`. Instead, **map the dev container to the host developer's UID/GID** so those files stay owned by the developer and remain removable by them, with no per-developer image rebuild.
+
+    **Third-party stateful services you don't build (databases, caches, message brokers...).** Use the **same image in development and production**. Their state lives in named volumes rather than bind-mounted source, so the host-UID concern above does not apply, and one pinned image (cf. OCPA-R1) keeps dev behaviour identical to prod instead of masking bugs behind a lighter dev-only variant. That single image must still run **non-root**: most official images already drop to an unprivileged user internally (e.g., `postgres` runs as `postgres`, `redis` as `redis`, `mariadb` as `mysql`), so the rule is simply **don't override them back to `root`**. If an image only ships a root default, prefer a tag/variant that runs unprivileged rather than forcing `user:` on an entrypoint that needs root to initialise its data directory.
+
+    Production target of an image you build (least privilege). `node:*-alpine` already ships a `node` user (uid 1000); otherwise create one:
+
+    ```dockerfile
+    FROM base AS prod
+    COPY README.md ./README.md
+    COPY docs ./docs
+    # OCPA-R18: production runs as non-root
+    USER node
+    CMD ["markserv", "-p", "8642", "-a", "0.0.0.0", "/app"]
+    ```
+
+    Development target. Keep the default user in the image, but map the runtime user to the host IDs in the dev compose file. Set a writable `HOME` because an arbitrary UID has no `/etc/passwd` entry and some tooling (npm, pip caches...) expects one:
+
+    ```yml
+    # compose.dev.yml
+    services:
+      myapp:
+        # OCPA-R18: bind-mounted files are created as the host developer, so they stay removable
+        user: "${UID:-1000}:${GID:-1000}"
+        environment:
+          HOME: /tmp
+    ```
+
+    Export the host IDs from the Makefile so Compose can interpolate them (POSIX, cf. OCPA-R24). `UID`/`GID` are shell values that are not exported by default, so the Makefile must export them:
+
+    ```makefile
+    # OCPA-R18: expose the host user's IDs to Compose interpolation
+    export UID := $(shell id -u)
+    export GID := $(shell id -g)
+    ```
+
+    Optionally (or additionally), mask a heavy generated directory with an anonymous/named volume so it never lands on the host bind mount at all. This also speeds up I/O on macOS/Windows. The trade-off is that the directory is no longer visible to the host IDE, so it cannot resolve dependencies for local intellisense:
+
+    ```yml
+    volumes:
+      - ./app:/app
+      - /app/node_modules   # anonymous volume masks the bind mount subpath
+    ```
+
+    </details>
+
 - **OCPA-R19**: services that must be exposed (using the `ports` property) must use an environment variable to flexibly adapt different environments (dev, staging, prod) ;
 - **OCPA-R20**: any environment variable used inside a service must be listed in the `environments` property (respectively a configmap or similar for its Kubernetes configuration): this makes sure each environment variable is defined intentionally and introducing a new one is noticed ;
 - **OCPA-R21**: any secret or global variable in each service must be using environment variables (e.g., Python's `os.getenv()`, PHP's `getenv()`...). They shall not have default values so software crashes if not intentionally set (cf. OPCA-R20, `./scripts/validate-envs.sh`) ;
@@ -130,6 +195,51 @@ For deployment:
 - **OCPA-R23**: there's no default `compose.yml` file and each compose file has a prefix to avoid deployment mistakes, making sure the user intentionally targets the right environment using `make` commands instead of compose commands directly ;
 - **OCPA-R24**: each shell/bash script in `./scripts` or code in `Makefile` must be POSIX-compliant to allow maximum cross-compatibility and avoid CI pipelines errors ;
 - **OCPA-R25**: use pre-commit script `./scripts/pre-commit` to help preserve maximum maintainability in your repo ;
+- **OCPA-R26**: each service must declare resource limits (at least memory), mirroring OCPA-R10's logging limits, so a single misbehaving service can't exhaust host RAM/CPU and starve its neighbours. Compose v2 honours `deploy.resources.limits` under `docker compose up` ;
+
+    <details closed>
+    <summary>Example</summary>
+
+    ```yml
+    myapp:
+        deploy:
+            resources:
+                limits:
+                    memory: 256m
+    ```
+
+    </details>
+
+- **OCPA-R27**: every build context (each directory referenced by a `Dockerfile`) must ship a `.dockerignore` excluding VCS metadata, host env files, dependencies and build artifacts. This shrinks the build context (faster builds, smaller cache) and, more importantly, prevents secrets or local `.env` files from silently leaking into image layers ;
+
+    <details closed>
+    <summary>Example</summary>
+
+    ```dockerignore
+    .git
+    .env
+    .env.*
+    node_modules
+    **/node_modules
+    ```
+
+    </details>
+
+- **OCPA-R28**: `depends_on` must use the long form with `condition: service_healthy` (building on OCPA-R13 healthchecks) so a service waits for its dependencies to be actually ready, not merely started ;
+
+    <details closed>
+    <summary>Example</summary>
+
+    ```yml
+    app:
+        depends_on:
+            db:
+                condition: service_healthy
+    ```
+
+    </details>
+
+- **OCPA-R29**: CI must scan built images and dependencies for known vulnerabilities (e.g., Trivy, Grype) and fail on `HIGH`/`CRITICAL`, complementing secret scanning (gitleaks) and version pinning (OCPA-R1), because a pinned version still needs to be a non-vulnerable one ;
 
 ### Auto-Pull (CRON)
 

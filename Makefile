@@ -2,6 +2,11 @@
 # Required commands: dev, dev-[build,up,restart,down], prod, prod-[build,up,restart,down],
 #                    helm-[deploy,uninstall], downa
 
+# OCPA-R18: expose the host developer's IDs to Compose interpolation so files created in
+# dev bind mounts stay owned by (and removable by) the logged-in user, without a rebuild.
+export UID := $(shell id -u)
+export GID := $(shell id -g)
+
 .PHONY: dev dev-build dev-up dev-restart dev-down \
         build up restart down \
         prod prod-build prod-up prod-restart prod-down \

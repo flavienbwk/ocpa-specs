@@ -13,6 +13,13 @@ services:
       target: dev
     # OCPA-R14: Restart policy
     restart: unless-stopped
+    # OCPA-R18: run as the host developer's UID/GID so files created in bind mounts
+    # (node_modules, __pycache__, build output...) stay owned by and removable by the
+    # host user. IDs are exported by the Makefile; defaults keep direct `docker compose` usable.
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      # Give tooling a writable HOME when the mapped UID has no /etc/passwd entry
+      HOME: /tmp
     volumes:
       # Mount docs for hot-reload during development
       - ./README.md:/app/README.md:ro
