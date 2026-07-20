@@ -1,0 +1,20 @@
+# OCPA-R27: keep the build context small and avoid leaking host files into image layers.
+# NOTE: the prod Dockerfile target COPYs README.md and docs/, so those must NOT be ignored.
+
+# VCS & CI metadata
+.git
+.gitignore
+.github
+
+# Host env and secrets. Never bake these into image layers
+.env
+.env.*
+
+# Dependencies & build artifacts (regenerated inside the container)
+node_modules
+**/node_modules
+__pycache__
+**/__pycache__
+
+# Logs
+*.log

@@ -1,0 +1,27 @@
+name: PR Direction Check
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  check-direction:
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'main' && github.head_ref == 'release'
+    steps:
+      - name: Close invalid PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '⛔ PRs from `release` to `main` are not allowed.\n\nThe correct flow is `main` → `release`.\n\nThis PR has been automatically closed.'
+            });
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: 'closed'
+            });
