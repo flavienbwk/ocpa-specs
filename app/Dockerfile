@@ -21,4 +21,6 @@ FROM base AS prod
 # Copy documentation files (from root context)
 COPY README.md ./README.md
 COPY docs ./docs
+# OCPA-R18: production runs as a non-root user (the node:*-alpine image ships uid 1000 "node")
+USER node
 CMD ["markserv", "-p", "8642", "-a", "0.0.0.0", "/app"]

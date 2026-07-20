@@ -16,6 +16,11 @@ services:
     logging:
       options:
         max-size: "1m"
+    # OCPA-R26: Resource limits so one service can't exhaust host RAM/CPU
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     # OCPA-R17: Exposed ports (internal)
     expose:
       - "8642"
