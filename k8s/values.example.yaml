@@ -49,3 +49,20 @@ healthcheck:
   periodSeconds: 30
   timeoutSeconds: 10
   failureThreshold: 3
+
+# RBAC configuration
+rbac:
+  create: true  # Enable RBAC resources creation
+
+# Security context (OCPA security best practices)
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
