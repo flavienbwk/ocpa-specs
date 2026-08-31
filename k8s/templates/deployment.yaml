@@ -15,6 +15,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-markserv
     spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (printf "%s-markserv" .Release.Name) }}
+      {{- end }}
       containers:
         - name: markserv
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

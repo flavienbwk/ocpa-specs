@@ -136,6 +136,12 @@ jobs:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+          serviceAccount:
+            create: true
+            name: ""
+          rbac:
+            create: true
+            rules: []
           EOF
 
       - name: Lint Helm chart
