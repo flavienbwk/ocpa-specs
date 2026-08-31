@@ -49,3 +49,13 @@ healthcheck:
   periodSeconds: 30
   timeoutSeconds: 10
   failureThreshold: 3
+
+# Service Account (dedicated SA for RBAC good practices)
+serviceAccount:
+  create: true
+  name: ""  # Defaults to <release>-markserv
+
+# RBAC (least privilege: markserv needs no K8s API access by default)
+rbac:
+  create: true
+  rules: []

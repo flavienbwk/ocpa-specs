@@ -1,0 +1,28 @@
+{{- if .Values.rbac.create }}
+{{- $saName := .Values.serviceAccount.name | default (printf "%s-markserv" .Release.Name) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-markserv
+  labels:
+    app: {{ .Release.Name }}-markserv
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+rules:
+  {{- toYaml .Values.rbac.rules | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-markserv
+  labels:
+    app: {{ .Release.Name }}-markserv
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $saName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-markserv
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
